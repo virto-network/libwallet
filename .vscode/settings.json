@@ -1,0 +1,5 @@
+{
+    "editor.defaultFormatter": "rust-lang.rust",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+}

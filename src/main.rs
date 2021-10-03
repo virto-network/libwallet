@@ -29,7 +29,7 @@ async fn main() {
      let network: &str = matches.value_of("network").unwrap_or("substrate");
 
      let address: String =
-          pub_address.to_ss58check_with_version(network.parse().unwrap_or(Default::default()));
+          pub_address.to_ss58check_with_version(network.parse().unwrap_or_else(|_| Default::default()));
      println!("Public key (SS58): {}", address);
 }
 
