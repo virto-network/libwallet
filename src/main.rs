@@ -1,6 +1,7 @@
 extern crate clap;
 use clap::{App, Arg};
 use libwallet::{
+     self,
      sr25519::{Pair, Public},
      Pair as _, SimpleVault, Wallet,
 };
@@ -15,8 +16,8 @@ async fn main() {
           .arg(Arg::with_name("seed")
                .short("s")
                .long("from-seed")
-               .value_name("SEED or MNEMONIC")
-               .help("Generates a wallet address from seed."))
+               .value_name("MNEMONIC")
+               .help("Generates a wallet address from mnemonic."))
           .arg(Arg::with_name("network")
                .short("n")
                .long("network")
@@ -32,23 +33,24 @@ async fn main() {
 }
 
 async fn get_pub_address(seed: Option<&str>) -> Public {
-     match seed {
+     let vault = match seed {
           Some(mnemonic) => {
-               let vault = SimpleVault::<Pair>::from(mnemonic);
-               let mut wallet = Wallet::from(vault);
-               wallet.unlock("").await.unwrap();
-               let public_add = wallet.root_account().unwrap().public();
                println!("Secret Key: \"{}\"", mnemonic);
-               public_add
+               let vault = SimpleVault::<Pair>::from(mnemonic);
+               vault
           }
           None => {
-               let vault = SimpleVault::<Pair>::new();
-               let mut wallet = Wallet::from(vault);
-               wallet.unlock("").await.unwrap();
-               let public_add = wallet.root_account().unwrap().public();
-               public_add
+               let mnemonic: String = Pair::generate_with_phrase(None).1;
+               println!("Secret Key: \"{}\"", mnemonic);
+               let vault = SimpleVault::<Pair>::from(mnemonic.as_str());
+               vault
           }
-     }
+     };
+
+     let mut wallet = Wallet::from(vault);
+     wallet.unlock("").await.unwrap();
+     let public_add = wallet.root_account().unwrap().public();
+     public_add
 }
 
 fn get_network_format(network: &str) -> Ss58AddressFormat {
