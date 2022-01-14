@@ -5,6 +5,8 @@ extern crate alloc;
 use alloc::boxed::Box;
 #[cfg(feature = "simple")]
 mod simple;
+#[cfg(feature = "substrate")]
+mod substrate_ext;
 
 pub use async_trait::async_trait;
 use core::convert::{TryFrom, TryInto};
@@ -83,7 +85,7 @@ impl<V: Vault> From<V> for Wallet<V> {
     }
 }
 
-pub type Account<T> = <T as CryptoType>::Pair;
+pub struct Account<T>(T);
 
 impl<V: Vault> Wallet<V> {
     pub fn new(vault: V, network: Network) -> Self {
