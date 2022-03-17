@@ -1,3 +1,5 @@
+use std::{collections::VecDeque, cell::RefCell};
+
 use crate::{CryptoType, Network, Pair};
 
 const ROOT_ACCOUNT: &str = "ROOT";
@@ -10,11 +12,13 @@ pub enum Account<'a, P> {
     Root {
         pair: P,
         network: Network,
+        pending_sign: RefCell<VecDeque<Vec<u8>>>,
     },
     Sub {
         path: &'a str,
         name: &'a str,
         network: Network,
+        pending_sign: RefCell<VecDeque<Vec<u8>>>,
     },
 }
 
@@ -26,6 +30,7 @@ where
         Account::Root {
             pair,
             network: Network::default(),
+            pending_sign: RefCell::new(VecDeque::new()),
         }
     }
 
@@ -67,6 +72,23 @@ where
             Self::Sub { .. } => todo!(),
         }
     }
+
+
+    /// Try to sign messages from the queue
+    /// Return signed messages
+    pub fn sign_all_pending(&mut self) -> Vec<P::Signature> {
+        let mut signed = Vec::new();
+        let pending = match self {
+            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign.clone()
+        };
+        while !pending.borrow().is_empty() {
+            let msg = pending.borrow_mut().pop_front();
+            let signature = self.sign(&msg.unwrap());
+            signed.push(signature)
+        }
+        signed
+    }
+
 }
 
 impl<P: Pair> CryptoType for Account<'_, P> {

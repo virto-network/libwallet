@@ -48,7 +48,7 @@ where
     V: Vault<C>,
 {
     fn from(vault: V) -> Self {
-        Wallet { vault, root: None }
+        Wallet { vault, root: None, }
     }
 }
 
@@ -106,6 +106,17 @@ where
     pub fn sign(&self, message: &[u8]) -> Result<SignatureOf<V, C>> {
         Ok(self.root_account()?.sign(message))
     }
+
+    /// Try to sign all messages in the queue of an account
+    /// Returns signed transactions 
+    pub fn sign_pending(self, name: &str) -> Vec<SignatureOf<V, C>> {
+        match name {
+            "ROOT" => 
+                self.root.map(|mut a| a.sign_all_pending()).unwrap_or(Vec::new()),
+            _ => todo!(),
+        }
+    }
+    
 
     /// Switch the network used by the root account which is used by
     /// default when deriving new sub-accounts
