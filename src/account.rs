@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, cell::RefCell};
 
-use crate::{CryptoType, Network, Pair};
+use crate::{CryptoType, Network, Pair, Result};
 
 const ROOT_ACCOUNT: &str = "ROOT";
 
@@ -73,18 +73,26 @@ where
         }
     }
 
+    /// Save data to be signed later
+    pub fn add_to_pending_sign(&mut self, message: &[u8]) -> Result<()> {
+        match self {
+            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => 
+                pending_sign.borrow_mut().push_back(message.into()),
+        };
+        Ok(())
+    }
 
     /// Try to sign messages from the queue
     /// Return signed messages
-    pub fn sign_all_pending(&mut self) -> Vec<P::Signature> {
+    pub fn sign_all_pending(&mut self) -> Vec<(Vec<u8>, P::Signature)> {
         let mut signed = Vec::new();
         let pending = match self {
             Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign.clone()
         };
         while !pending.borrow().is_empty() {
-            let msg = pending.borrow_mut().pop_front();
-            let signature = self.sign(&msg.unwrap());
-            signed.push(signature)
+            let msg = pending.borrow_mut().pop_front().unwrap();
+            let signature = self.sign(&msg);
+            signed.push((msg, signature));
         }
         signed
     }

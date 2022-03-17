@@ -74,7 +74,7 @@ where
     /// let vault: SimpleVault<sr25519::Pair> = "//Alice".into();
     /// let mut wallet = Wallet::from(vault);
     /// if wallet.is_locked() {
-    ///     wallet = wallet.unlock("").await?;
+    ///     wallet = wallet.unlock(()).await?;
     /// }
     /// # assert_eq!(wallet.is_locked(), false);
     /// # Ok(())
@@ -98,25 +98,39 @@ where
     /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
     /// # #[async_std::main] async fn main() -> Result<()> {
     ///
-    /// let wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock("").await?;
+    /// let wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
     /// let signature = wallet.sign(&[0x01, 0x02, 0x03]);
-    /// assert!(signature.is_ok());
+    /// # assert!(signature.is_ok());
     /// # Ok(()) }
     /// ```
     pub fn sign(&self, message: &[u8]) -> Result<SignatureOf<V, C>> {
         Ok(self.root_account()?.sign(message))
     }
 
+    /// Save data to be signed later by root account
+    /// ```
+    /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
+    /// # #[async_std::main] async fn main() -> Result<()> {
+    ///
+    /// let wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
+    /// let res = wallet.save_to_sign_later(&[0x01, 0x02, 0x03]);
+    /// assert!(res.is_ok());
+    /// # Ok(()) }
+    /// ```
+    pub fn save_to_sign_later(self, message: &[u8]) -> Result<()> {
+        self.root.map(|mut a| a.add_to_pending_sign(message)).unwrap_or(Err(Error::Locked))
+    }
+
     /// Try to sign all messages in the queue of an account
     /// Returns signed transactions 
-    pub fn sign_pending(self, name: &str) -> Vec<SignatureOf<V, C>> {
+    pub fn sign_pending(self, name: &str) -> Vec<(Vec<u8>, SignatureOf<V, C>)> {
         match name {
             "ROOT" => 
                 self.root.map(|mut a| a.sign_all_pending()).unwrap_or(Vec::new()),
-            _ => todo!(),
+            _ => todo!(), //search sub-accounts
         }
     }
-    
+
 
     /// Switch the network used by the root account which is used by
     /// default when deriving new sub-accounts
