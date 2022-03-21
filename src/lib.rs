@@ -112,22 +112,40 @@ where
     /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
     /// # #[async_std::main] async fn main() -> Result<()> {
     ///
-    /// let wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
+    /// let mut wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
     /// let res = wallet.save_to_sign_later(&[0x01, 0x02, 0x03]);
     /// assert!(res.is_ok());
     /// # Ok(()) }
     /// ```
-    pub fn save_to_sign_later(self, message: &[u8]) -> Result<()> {
-        self.root.map(|mut a| a.add_to_pending_sign(message)).unwrap_or(Err(Error::Locked))
+    pub fn save_to_sign_later(&mut self, message: &[u8]) -> Result<()> {
+        self.root.as_mut().map(|a| a.add_to_pending_sign(message)).unwrap_or(Err(Error::Locked))
     }
 
     /// Try to sign all messages in the queue of an account
     /// Returns signed transactions 
-    pub fn sign_pending(self, name: &str) -> Vec<(Vec<u8>, SignatureOf<V, C>)> {
+    pub fn sign_pending(&mut self, name: &str) -> Vec<(Vec<u8>, SignatureOf<V, C>)> {
         match name {
             "ROOT" => 
-                self.root.map(|mut a| a.sign_all_pending()).unwrap_or(Vec::new()),
+                self.root.as_mut().map(|a| a.sign_all_pending()).unwrap_or(Vec::new()),
             _ => todo!(), //search sub-accounts
+        }
+    }
+
+    /// Check 
+    /// ```
+    /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
+    /// # #[async_std::main] async fn main() -> Result<()> {
+    ///
+    /// let mut wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
+    /// wallet.save_to_sign_later(&[0x01, 0x02, 0x03]);
+    /// let res = wallet.check_data_pending_sign("ROOT");
+    /// assert_eq!(vec![vec![0x01, 0x02, 0x03]], res);
+    /// # Ok(()) }
+    /// ```
+    pub fn check_data_pending_sign(&self, name: &str) -> Vec<Vec<u8>> {
+        match name {
+            "ROOT" => self.root_account().unwrap().get_pending_sign(),
+            _ => todo!(), //get sub-accounts
         }
     }
 

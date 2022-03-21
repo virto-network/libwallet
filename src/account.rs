@@ -96,7 +96,17 @@ where
         }
         signed
     }
-
+    
+    pub fn get_pending_sign(&self) -> Vec<Vec<u8>> {
+        let pending = self.pending_sign();
+        pending.borrow().iter().map(|i| i.clone()).collect()
+    }
+    
+    fn pending_sign(&self) -> &RefCell<VecDeque<Vec<u8>>> {
+        match self {
+            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign
+        }
+    }
 }
 
 impl<P: Pair> CryptoType for Account<'_, P> {
