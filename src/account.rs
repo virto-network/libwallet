@@ -1,5 +1,3 @@
-use std::{collections::VecDeque, cell::RefCell};
-
 use crate::{CryptoType, Network, Pair, Result};
 
 const ROOT_ACCOUNT: &str = "ROOT";
@@ -12,13 +10,13 @@ pub enum Account<'a, P> {
     Root {
         pair: P,
         network: Network,
-        pending_sign: RefCell<VecDeque<Vec<u8>>>,
+        pending_sign: Vec<Vec<u8>>,
     },
     Sub {
         path: &'a str,
         name: &'a str,
         network: Network,
-        pending_sign: RefCell<VecDeque<Vec<u8>>>,
+        pending_sign: Vec<Vec<u8>>,
     },
 }
 
@@ -30,7 +28,7 @@ where
         Account::Root {
             pair,
             network: Network::default(),
-            pending_sign: RefCell::new(VecDeque::new()),
+            pending_sign: Vec::new(),
         }
     }
 
@@ -77,7 +75,7 @@ where
     pub fn add_to_pending_sign(&mut self, message: &[u8]) -> Result<()> {
         match self {
             Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => 
-                pending_sign.borrow_mut().push_back(message.into()),
+                pending_sign.push(message.into()),
         };
         Ok(())
     }
@@ -86,11 +84,11 @@ where
     /// Return signed messages
     pub fn sign_all_pending(&mut self) -> Vec<(Vec<u8>, P::Signature)> {
         let mut signed = Vec::new();
-        let pending = match self {
+        let mut pending = match self {
             Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign.clone()
         };
-        while !pending.borrow().is_empty() {
-            let msg = pending.borrow_mut().pop_front().unwrap();
+        while !pending.is_empty() {
+            let msg = pending.pop().unwrap();
             let signature = self.sign(&msg);
             signed.push((msg, signature));
         }
@@ -99,10 +97,10 @@ where
     
     pub fn get_pending_sign(&self) -> Vec<Vec<u8>> {
         let pending = self.pending_sign();
-        pending.borrow().iter().map(|i| i.clone()).collect()
+        pending.iter().map(|i| i.clone()).collect()
     }
     
-    fn pending_sign(&self) -> &RefCell<VecDeque<Vec<u8>>> {
+    fn pending_sign(&self) -> &Vec<Vec<u8>> {
         match self {
             Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign
         }
