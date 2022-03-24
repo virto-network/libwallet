@@ -72,7 +72,7 @@ where
     }
 
     /// Save data to be signed later
-    pub fn add_to_pending_sign(&mut self, message: &[u8]) -> Result<()> {
+    pub fn add_to_pending(&mut self, message: &[u8]) -> Result<()> {
         match self {
             Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => 
                 pending_sign.push(message.into()),
@@ -82,7 +82,7 @@ where
 
     /// Try to sign messages from the queue
     /// Return signed messages
-    pub fn sign_all_pending(&mut self) -> Vec<(Vec<u8>, P::Signature)> {
+    pub fn sign_pending(&mut self) -> Vec<(Vec<u8>, P::Signature)> {
         let mut signed = Vec::new();
         let mut pending = match self {
             Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign.clone()
@@ -95,7 +95,7 @@ where
         signed
     }
     
-    pub fn get_pending_sign(&self) -> Vec<Vec<u8>> {
+    pub fn get_pending(&self) -> Vec<Vec<u8>> {
         let pending = self.pending_sign();
         pending.iter().map(|i| i.clone()).collect()
     }
