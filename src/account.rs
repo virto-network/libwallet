@@ -83,16 +83,15 @@ where
     /// Try to sign messages from the queue
     /// Return signed messages
     pub fn sign_pending(&mut self) -> Vec<(Vec<u8>, P::Signature)> {
-        let mut signed = Vec::new();
         let mut pending = match self {
-            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign.clone()
+            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => {
+                let pending = pending_sign.clone();
+                pending_sign.clear();
+                pending
+            }
         };
-        while !pending.is_empty() {
-            let msg = pending.pop().unwrap();
-            let signature = self.sign(&msg);
-            signed.push((msg, signature));
-        }
-        signed
+
+        pending.drain(..).map(|msg| (msg.clone(), self.sign(&msg))).collect()
     }
     
     pub fn get_pending(&self) -> Vec<Vec<u8>> {

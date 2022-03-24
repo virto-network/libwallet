@@ -123,6 +123,18 @@ where
 
     /// Try to sign all messages in the queue of an account
     /// Returns signed transactions 
+    /// ```
+    /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
+    /// # #[async_std::main] async fn main() -> Result<()> {
+    ///
+    /// let mut wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
+    /// wallet.sign_later(&[0x01, 0x02, 0x03]);
+    /// wallet.sign_later(&[0x01, 0x02]);
+    /// wallet.sign_pending("ROOT");
+    /// let res = wallet.get_pending("ROOT");
+    /// assert!(res.is_empty());
+    /// # Ok(()) }
+    /// ```
     pub fn sign_pending(&mut self, name: &str) -> Vec<(Vec<u8>, SignatureOf<V, C>)> {
         match name {
             "ROOT" => 
@@ -137,9 +149,10 @@ where
     /// # #[async_std::main] async fn main() -> Result<()> {
     ///
     /// let mut wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
-    /// wallet.save_to_sign_later(&[0x01, 0x02, 0x03]);
+    /// wallet.sign_later(&[0x01, 0x02, 0x03]);
+    /// wallet.sign_later(&[0x01, 0x02]);
     /// let res = wallet.get_pending("ROOT");
-    /// assert_eq!(vec![vec![0x01, 0x02, 0x03]], res);
+    /// assert_eq!(vec![vec![0x01, 0x02, 0x03], vec![0x01, 0x02]], res);
     /// # Ok(()) }
     /// ```
     pub fn get_pending(&self, name: &str) -> Vec<Vec<u8>> {
