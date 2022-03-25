@@ -1,4 +1,5 @@
-use crate::{CryptoType, Network, Pair, Result};
+use crate::{CryptoType, Network, Pair};
+use core::mem;
 
 const ROOT_ACCOUNT: &str = "ROOT";
 
@@ -72,36 +73,35 @@ where
     }
 
     /// Save data to be signed later
-    pub fn add_to_pending(&mut self, message: &[u8]) -> Result<()> {
-        match self {
-            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => 
-                pending_sign.push(message.into()),
-        };
-        Ok(())
+    pub fn add_to_pending(&mut self, message: &[u8]) {
+        self.pending_sign_mut().push(message.into());
     }
 
-    /// Try to sign messages from the queue
-    /// Return signed messages
+    /// Sign messages from the queue returning them and their signatures
     pub fn sign_pending(&mut self) -> Vec<(Vec<u8>, P::Signature)> {
-        let mut pending = match self {
-            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => {
-                let pending = pending_sign.clone();
-                pending_sign.clear();
-                pending
-            }
-        };
+        let v = mem::take(self.pending_sign_mut());
+        v.into_iter()
+            .map(|msg| {
+                let s = self.sign(&msg);
+                (msg, s)
+            })
+            .collect()
+    }
 
-        pending.drain(..).map(|msg| (msg.clone(), self.sign(&msg))).collect()
+    // Return an iterator over the messages pending for signature in this account
+    pub fn get_pending(&self) -> impl Iterator<Item = &[u8]> {
+        self.pending_sign().iter().map(|i| i.as_ref())
     }
-    
-    pub fn get_pending(&self) -> Vec<Vec<u8>> {
-        let pending = self.pending_sign();
-        pending.iter().map(|i| i.clone()).collect()
+
+    fn pending_sign_mut(&mut self) -> &mut Vec<Vec<u8>> {
+        match self {
+            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign,
+        }
     }
-    
+
     fn pending_sign(&self) -> &Vec<Vec<u8>> {
         match self {
-            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign
+            Self::Root { pending_sign, .. } | Self::Sub { pending_sign, .. } => pending_sign,
         }
     }
 }
@@ -109,4 +109,3 @@ where
 impl<P: Pair> CryptoType for Account<'_, P> {
     type Pair = P;
 }
-

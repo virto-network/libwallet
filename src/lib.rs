@@ -48,7 +48,7 @@ where
     V: Vault<C>,
 {
     fn from(vault: V) -> Self {
-        Wallet { vault, root: None, }
+        Wallet { vault, root: None }
     }
 }
 
@@ -118,11 +118,14 @@ where
     /// # Ok(()) }
     /// ```
     pub fn sign_later(&mut self, message: &[u8]) -> Result<()> {
-        self.root.as_mut().map(|a| a.add_to_pending(message)).unwrap_or(Err(Error::Locked))
+        self.root
+            .as_mut()
+            .map(|a| a.add_to_pending(message))
+            .ok_or(Error::Locked)
     }
 
     /// Try to sign all messages in the queue of an account
-    /// Returns signed transactions 
+    /// Returns signed transactions
     /// ```
     /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
     /// # #[async_std::main] async fn main() -> Result<()> {
@@ -131,19 +134,24 @@ where
     /// wallet.sign_later(&[0x01, 0x02, 0x03]);
     /// wallet.sign_later(&[0x01, 0x02]);
     /// wallet.sign_pending("ROOT");
-    /// let res = wallet.get_pending("ROOT");
+    /// let res = wallet.get_pending("ROOT").collect::<Vec<_>>();
     /// assert!(res.is_empty());
     /// # Ok(()) }
     /// ```
     pub fn sign_pending(&mut self, name: &str) -> Vec<(Vec<u8>, SignatureOf<V, C>)> {
         match name {
-            "ROOT" => 
-                self.root.as_mut().map(|a| a.sign_pending()).unwrap_or(Vec::new()),
+            "ROOT" => self
+                .root
+                .as_mut()
+                .map(|a| a.sign_pending())
+                .unwrap_or_default(),
             _ => todo!(), //search sub-accounts
         }
     }
 
-    /// Check 
+    /// Iteratate over the messages with pending signature of the named account.
+    /// It panics if the wallet is locked.
+    ///
     /// ```
     /// # use libwallet::{Wallet, SimpleVault, sr25519, Result};
     /// # #[async_std::main] async fn main() -> Result<()> {
@@ -151,17 +159,16 @@ where
     /// let mut wallet = Wallet::new(SimpleVault::<sr25519::Pair>::new()).unlock(()).await?;
     /// wallet.sign_later(&[0x01, 0x02, 0x03]);
     /// wallet.sign_later(&[0x01, 0x02]);
-    /// let res = wallet.get_pending("ROOT");
+    /// let res = wallet.get_pending("ROOT").collect::<Vec<_>>();
     /// assert_eq!(vec![vec![0x01, 0x02, 0x03], vec![0x01, 0x02]], res);
     /// # Ok(()) }
     /// ```
-    pub fn get_pending(&self, name: &str) -> Vec<Vec<u8>> {
+    pub fn get_pending(&self, name: &str) -> impl Iterator<Item = &[u8]> {
         match name {
             "ROOT" => self.root_account().unwrap().get_pending(),
             _ => todo!(), //get sub-accounts
         }
     }
-
 
     /// Switch the network used by the root account which is used by
     /// default when deriving new sub-accounts
