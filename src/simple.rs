@@ -58,7 +58,7 @@ impl<P: Pair> core::str::FromStr for SimpleVault<P> {
 impl<P: Pair> Vault for SimpleVault<P> {
     type Pair = P;
 
-    async fn unlock(&self, _: ()) -> Result<P> {
+    async fn unlock(&mut self, _: ()) -> Result<P> {
         let foo = Self::Pair::from_seed(&self.seed);
         Ok(foo)
     }
