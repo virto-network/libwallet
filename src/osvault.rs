@@ -9,16 +9,37 @@ pub struct OSVault<P: Pair> {
 }
 
 impl<P: Pair> OSVault<P> {
-    // Retrieve key saved in OS with given name.
-    // If seed received, save this seed as password in the OS.
-    pub fn new(name: &str, seed: Option<&str>) -> Self {
+    // Create new entry with a random seed and save it in the OS.
+    pub fn create(name: &str) -> Result<Self> {
         let entry = keyring::Entry::new("wallet", &name);
-        seed.map(|s| entry.set_password(s));
-        OSVault {
-            entry,
-            seed: None//seed.map(|s| P::from_string_with_seed(s, None)),
-        }
+        let (_, phrase, seed) = P::generate_with_phrase(None);
+        entry.set_password(&phrase).map_err(|_| Error::InvalidPhrase)?;
+        Ok(OSVault { 
+            entry, 
+            seed: Some(seed) 
+        })
     }
+    
+    // Create new password saved in OS with given name.
+    // Save seed as password in the OS.
+    pub fn create_with_seed(name: &str, seed: &str) -> Result<Self> {
+        let entry = keyring::Entry::new("wallet", &name);
+        entry.set_password(seed).map_err(|_| Error::InvalidPhrase)?;
+        Ok(OSVault {
+            entry,
+            seed: None,
+        })
+    }
+
+    // Make new OSVault from entry with name. 
+    // Doesn't save any password.
+    // If password doesn't exist in the system, it will fail later.
+    pub fn new(name: &str) -> Self {
+        OSVault { 
+            entry: keyring::Entry::new("wallet", &name), 
+            seed: None 
+        }
+    }  
 }
 
 #[async_trait(?Send)]

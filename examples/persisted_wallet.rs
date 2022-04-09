@@ -14,13 +14,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let network: &str = "substrate";
 
-    let vault = libwallet::OSVault::<Pair>::new(account_name, Some(MNEMONIC));
+    let vault = libwallet::OSVault::<Pair>::create_with_seed(account_name, MNEMONIC).unwrap();
     let mut wallet = Wallet::new(vault).unlock(()).await?;
     let account = wallet.switch_default_network(network)?;
 
     println!("Public key ({}): {}", account.network(), account);
 
-    let copy_vault = libwallet::OSVault::<Pair>::new(account_name, None);
+    let copy_vault = libwallet::OSVault::<Pair>::new(account_name);
     let mut wallet = Wallet::new(copy_vault).unlock(()).await?;
     let account = wallet.switch_default_network(network)?;
 
