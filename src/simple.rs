@@ -10,7 +10,7 @@ impl<P: Pair> SimpleVault<P> {
     /// ```
     /// # use libwallet::{SimpleVault, Vault, Result, sr25519};
     /// # #[async_std::main] async fn main() -> Result<()> {
-    /// let vault = SimpleVault::<sr25519::Pair>::new();
+    /// let mut vault = SimpleVault::<sr25519::Pair>::new();
     /// assert!(vault.unlock(()).await.is_ok());
     /// # Ok(()) }
     /// ```
