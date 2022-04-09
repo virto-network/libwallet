@@ -10,15 +10,6 @@ pub struct OSVault<P: Pair> {
 
 impl<P: Pair> OSVault<P> {
     /// Create new entry with a random seed and save it in the OS.
-    /// ```
-    /// # use libwallet::{OSVault, Vault, Result, sr25519};
-    /// # #[async_std::main] async fn main() -> Result<()> {
-    /// let (mut vault, seed) = OSVault::<sr25519::Pair>::create("libwallet-doctest").unwrap();
-    /// println!("seed: {}", seed);
-    /// assert!(vault.unlock(()).await.is_ok());
-    /// assert!(!seed.is_empty());
-    /// # Ok(()) }
-    /// ```
     pub fn create(name: &str) -> Result<(Self, String)> {
         let entry = keyring::Entry::new("wallet", &name);
         let (_, phrase, seed) = P::generate_with_phrase(None);
