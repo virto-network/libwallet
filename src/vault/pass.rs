@@ -8,7 +8,7 @@ use prs_lib::{
 
 use crate::{RootAccount, Vault};
 
-/// A vault that holds secrets in memory
+/// A vault that stores secrets in a `pass` compatible repository
 pub struct Pass {
     store: Store,
     root: Option<RootAccount>,
@@ -18,7 +18,7 @@ pub struct Pass {
 const SERVICE_NAME: &str = "libwallet_service/";
 
 impl Pass {
-    /// Create a new OSKeyring vault for the given user.
+    /// Create a new `Pass` vault in the given location.
     /// The optional `lang` instructs the vault to generarte a backup phrase
     /// in the given language in case one does not exist.
     pub fn new<P: AsRef<str>>(store_path: P, lang: impl Into<Option<Language>>) -> Self {
