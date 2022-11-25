@@ -37,28 +37,19 @@ impl Pass {
 
         let secret = match self.store.find(Some(secret_path)) {
             FindSecret::Exact(secret) => Some(secret),
-            FindSecret::Many(secrets) => {
-                if secrets.is_empty() {
-                    None
-                } else {
-                    Some(secrets.get(0).unwrap().clone())
-                }
-            }
+            FindSecret::Many(secrets) => secrets.first().cloned(),
         };
 
-        if secret.is_none() {
-            return Err(Error::NotFound);
-        }
-
-        let secret = secret.unwrap();
-
+        let secret = secret.ok_or(Error::NotFound)?;
         let plaintext = crypto::context(Proto::Gpg)
             .map_err(|_e| Error::Decrypt)?
             .decrypt_file(&secret.path)
             .map_err(|_e| Error::Decrypt)?;
 
         let phrase = plaintext.unsecure_to_str().map_err(|_e| Error::Plaintext)?;
-        let phrase = phrase.parse::<mnemonic::Mnemonic>().map_err(|_e| Error::Plaintext)?;
+        let phrase = phrase
+            .parse::<mnemonic::Mnemonic>()
+            .map_err(|_e| Error::Plaintext)?;
 
         Ok(RootAccount::from_bytes(phrase.entropy()))
     }
