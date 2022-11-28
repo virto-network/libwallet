@@ -14,13 +14,21 @@ schnorrkel = { version = "0.10.2", default-features = false, optional = true }
 rand_core = { version = "0.6.3", optional = true }
 # soft derivation in no_std
 rand_chacha = { version = "0.3.1", default-features = false, optional = true } 
-# os vault
+# os vaultctr
 keyring = { version = "1.1.2", optional = true }
 prs-lib = { version = "0.2.1", optional = true }
 dirs = { version = "4.0", optional = true }
+# matrix vault
 pbkdf2 = { version = "0.11.0", default-features = false, optional = true }
 sha2 = { version = "0.10.2", default-features = false, optional = true }
 hmac = { version = "0.12.1", default-features = false, optional = true }
+surf = { version = "2.3.2", features = ["curl-client", "encoding"], optional= true }
+bs58 = { version = "0.4.0", optional = true }
+base64 = { version = "0.13.0", optional = true }
+aes = { version = "0.7.5", features=["ctr"], optional = true }
+ctr = { version = "0.8.0", optional = true }
+hkdf = { version = "0.12.0", optional = true }
+thiserror = { version = "1.0.31", optional = true }
 
 [[example]]
 name = "account_generation"
@@ -36,12 +44,18 @@ path = "examples/account_generation.rs"
 # name = "persisted_in_pass"
 # path = "examples/persisted_in_pass.rs"
 
+# needs feature vault_matrix
+# [[example]]
+# name = "persisted_in_matrix"
+# path = "examples/persisted_in_matrix.rs"
+
+
 [dev-dependencies]
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 async-std = { version = "1.10.0", features = ["attributes"] }
 
 [features]
-default = ["std", "substrate", "vault_simple", "mnemonic", "rand"]
+default = ["std", "aes", "substrate", "vault_simple", "mnemonic", "rand"]
 std = [
 	"rand_core/getrandom",
 	"schnorrkel/getrandom",
@@ -53,3 +67,5 @@ util_pin = ["pbkdf2", "hmac", "sha2"]
 vault_os = ["keyring", "util_pin"]
 vault_pass = ["prs-lib", "dirs"]
 vault_simple = []
+vault_matrix = ["pbkdf2", "surf", "serde", "sha2", "hmac", "bs58", "base64", "aes", "ctr", "hkdf", "thiserror"]
+

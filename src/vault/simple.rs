@@ -14,8 +14,10 @@ impl Simple {
     /// # type Result = std::result::Result<(), <vault::Simple as Vault>::Error>;
     /// # #[async_std::main] async fn main() -> Result {
     /// let mut vault = vault::Simple::generate(&mut rand_core::OsRng);
-    /// vault.unlock(()).await?;
-    /// assert!(vault.get_root().is_some());
+    /// let res = vault.unlock(&(), |_| {
+    ///    Some(())
+    /// }).await?;
+    /// assert!(res.is_some());
     /// # Ok(()) }
     /// ```
     #[cfg(feature = "rand")]
