@@ -37,16 +37,12 @@ pub trait Vault {
 
     /// Use a set of credentials to make the guarded keys available to the user.
     /// It returns a `Future` to allow for vaults that might take an arbitrary amount
-    /// of time getting the secret ready like waiting for some user phisical interaction.
-    async fn unlock<'a: 'b, 'b, T>(
-        &'a mut self,
-        cred: &'a Self::Credentials,
-        cb: impl FnMut(&'b RootAccount) -> T,
+    /// of time getting the secret ready like waiting for some user physical interaction.
+    async fn unlock<T>(
+        &mut self,
+        cred: &Self::Credentials,
+        cb: impl FnMut(&RootAccount) -> T,
     ) -> Result<T, Self::Error>;
-
-    // Get the root account container of the supported private key pairs
-    // if the vault hasn't been unlocked it should return `None`
-    // fn get_root(&self) -> Option<&RootAccount>;
 }
 
 /// The root account is a container of the key pairs stored in the vault and cannot be
