@@ -1,18 +1,17 @@
 use super::storage::{MatrixCredentials, MatrixError, MatrixStorage, MxId};
 use crate::{key_pair, RootAccount, Vault};
 
-pub struct MatrixUserCreds<'a> {
+pub struct Matrix<'a> {
     pub mxid: MxId<'a>,
     pub token: String,
 }
 
-pub struct Matrix<'a> {
-    pub creds: MatrixUserCreds<'a>,
-}
-
 impl<'a> Matrix<'a> {
-    pub fn new(creds: MatrixUserCreds) -> Matrix {
-        Matrix { creds }
+    pub fn new(id: impl Into<MxId<'a>>, token: String) -> Matrix<'a> {
+        Matrix {
+            mxid: id.into(),
+            token,
+        }
     }
 }
 
@@ -27,8 +26,7 @@ impl<'a> Vault for Matrix<'a> {
         creds: &Self::Credentials,
         mut cb: impl FnMut(&RootAccount) -> T,
     ) -> Result<T, Self::Error> {
-        let storage = MatrixStorage::new(&self.creds.mxid, &self.creds.token).await?;
-
+        let storage = MatrixStorage::new(&self.mxid, &self.token).await?;
         let stored_secret = storage.get_secret_from_storage(SECRET_NAME, creds).await;
 
         match stored_secret {

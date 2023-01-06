@@ -55,7 +55,7 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 async-std = { version = "1.10.0", features = ["attributes"] }
 
 [features]
-default = ["std", "aes", "substrate", "vault_simple", "mnemonic", "rand"]
+# default = ["std", "aes", "substrate", "vault_simple", "mnemonic", "rand", "vault_matrix"]
 std = [
 	"rand_core/getrandom",
 	"schnorrkel/getrandom",

@@ -15,6 +15,16 @@ pub enum MatrixCredentials {
     Keyfile(String),
 }
 
+impl From<String> for MatrixCredentials {
+    fn from(s: String) -> Self {
+        if s.split_whitespace().count() > 1 {
+            MatrixCredentials::Keyfile(s.into())
+        } else {
+            MatrixCredentials::Passphrase(s.into())
+        }
+    }
+}
+
 pub struct MxId<'a> {
     id: &'a str,
 }
@@ -328,7 +338,7 @@ impl MatrixStorageKey {
         }
 
         if parity != 0 {
-            return Err(MatrixError::InvalidStorageKey); //println!("wrong parity");
+            return Err(MatrixError::InvalidStorageKey);
         }
         // check if we have the correct header prefix
         // OLM_RECOVERY_KEY_PREFIX = [0x8B, 0x01];
@@ -351,7 +361,6 @@ impl MatrixStorageKey {
 
     pub fn validate_key(&self) -> Result<()> {
         let keys = self.derive_keys()?;
-        //let key_data = storage_key.key_data.as_ref();
         let key_data = self.key_data.as_ref().ok_or(MatrixError::StorageKeyError)?;
 
         let encrypted =
