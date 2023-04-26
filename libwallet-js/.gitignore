@@ -3,3 +3,4 @@ pkg/
 
 # Node.js modules
 node_modules/
+.vscode

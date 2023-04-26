@@ -1,5 +1,6 @@
 import { JsWallet } from '../pkg/libwallet_js';
 
+
 export type WalletConstructor = {
   Simple: string | null;
 }
