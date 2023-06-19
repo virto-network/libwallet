@@ -37,7 +37,8 @@ dirs = "4.0"
 [features]
 default = ["std", "substrate", "vault_simple", "mnemonic", "rand"]
 rand = ["rand_core"]
-sr25519 = ["schnorrkel/u64_backend", "schnorrkel/getrandom"]
+# sr25519 = ["schnorrkel/u64_backend", "schnorrkel/getrandom"]
+sr25519 = ["schnorrkel/u64_backend"]
 std = [
   "rand_core/getrandom",
 ]
