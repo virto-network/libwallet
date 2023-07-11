@@ -1,4 +1,4 @@
-use core::fmt::Debug;
+use core::{fmt::Debug, convert::TryInto};
 
 pub use derive::Derive;
 
@@ -17,13 +17,15 @@ pub trait Pair: Signer + Derive {
 
 pub trait Public: AsRef<[u8]> + Debug {}
 impl<const N: usize> Public for Bytes<N> {}
+pub trait Signature<const N: usize = 64>: AsRef<[u8]> + Debug + PartialEq + Into<Bytes<N>> {}
 
-pub trait Signature: AsRef<[u8]> + Debug + PartialEq {}
-impl<const N: usize> Signature for Bytes<N> {}
+impl<const N: usize> Signature<N> for Bytes<N> {}
+
 
 /// Something that can sign messages
 pub trait Signer {
     type Signature: Signature;
+
     fn sign_msg<M: AsRef<[u8]>>(&self, msg: M) -> Self::Signature;
     fn verify<M: AsRef<[u8]>>(&self, msg: M, sig: &[u8]) -> bool;
 }
@@ -133,6 +135,7 @@ pub mod any {
         #[cfg(not(feature = "sr25519"))]
         _None,
     }
+
     impl AsRef<[u8]> for AnySignature {
         fn as_ref(&self) -> &[u8] {
             match self {
@@ -141,10 +144,20 @@ pub mod any {
             }
         }
     }
+
     #[cfg(feature = "sr25519")]
     impl From<super::sr25519::Signature> for AnySignature {
         fn from(s: super::sr25519::Signature) -> Self {
             AnySignature::Sr25519(s)
+        }
+    }
+    
+    impl From<AnySignature> for super::Bytes<64> {
+        fn from(value: AnySignature) -> Self {
+            match value {
+                #[cfg(feature = "sr25519")]
+                AnySignature::Sr25519(s) => s
+            }
         }
     }
 
@@ -165,6 +178,7 @@ pub mod sr25519 {
     pub type Seed = Bytes<SEED_LEN>;
     pub type Public = Bytes<32>;
     pub type Signature = Bytes<64>;
+
     const SIGNING_CTX: &[u8] = b"substrate";
 
     impl super::Pair for Pair {
