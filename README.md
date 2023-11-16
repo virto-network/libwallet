@@ -1,3 +1,5 @@
+> This repository has moved to the [VirtoSDK](https://github.com/virto-network/virto-sdk)
+
 # Libwallet
 
 A lightweight and very portable library with simple to understand and use
